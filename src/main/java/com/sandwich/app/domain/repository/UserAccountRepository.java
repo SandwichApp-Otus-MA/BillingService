@@ -21,6 +21,10 @@ public interface UserAccountRepository extends JpaRepository<UserAccountEntity, 
     @Query("SELECT a FROM UserAccountEntity a WHERE a.id = :id")
     Optional<UserAccountEntity> findByIdWithLock(@Param("id") UUID id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM UserAccountEntity a WHERE a.userId = :id")
+    Optional<UserAccountEntity> findByUserIdWithLock(@Param("id") UUID id);
+
     @Override
     @Modifying
     @Query("delete from UserAccountEntity where id = :id")

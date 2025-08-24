@@ -34,7 +34,8 @@ public class UserAccountService {
                 throw new IllegalStateException("Пользователь c id: %s уже существует!".formatted(user.getId()));
             });
 
-        var newUserAccount = userAccountMapper.convert(new UserAccountEntity(), user);
+        var newUserAccount = userAccountMapper.convert(new UserAccountEntity(), user)
+            .setUserId(user.getUserId());
         return userAccountRepository.save(newUserAccount).getId();
     }
 
@@ -48,12 +49,12 @@ public class UserAccountService {
     }
 
     @Transactional
-    public BigDecimal deposit(UUID accountId, BigDecimal amount) {
+    public BigDecimal deposit(UUID userId, BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Сумма пополнения должна быть положительной");
         }
 
-        var account = userAccountRepository.findByIdWithLock(accountId)
+        var account = userAccountRepository.findByUserIdWithLock(userId)
             .orElseThrow(() -> new EntityNotFoundException("Аккаунт не найден"));
 
         var add = account.getBalance().add(amount);
@@ -62,12 +63,12 @@ public class UserAccountService {
     }
 
     @Transactional
-    public BigDecimal withdraw(UUID accountId, BigDecimal amount) {
+    public BigDecimal withdraw(UUID userId, BigDecimal amount) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Сумма снятия должна быть положительной");
         }
 
-        var account = userAccountRepository.findByIdWithLock(accountId)
+        var account = userAccountRepository.findByUserIdWithLock(userId)
             .orElseThrow(() -> new EntityNotFoundException("Аккаунт не найден"));
 
         if (account.getBalance().compareTo(amount) < 0) {

@@ -12,5 +12,6 @@ public interface UserAccountMapper {
     UserAccountDto convert(UserAccountEntity entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "userId", ignore = true)
     UserAccountEntity convert(@MappingTarget UserAccountEntity entity, UserAccountDto dto);
 }
