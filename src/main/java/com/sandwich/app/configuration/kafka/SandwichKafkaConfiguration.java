@@ -31,23 +31,23 @@ public class SandwichKafkaConfiguration {
     private KafkaProperties kafka = new KafkaProperties();
 
     @Bean
-    public KafkaAdmin noboKafkaAdmin(ObjectProvider<SslBundles> sslBundles) {
+    public KafkaAdmin sandwichKafkaAdmin(ObjectProvider<SslBundles> sslBundles) {
         var adminProperties = this.kafka.buildAdminProperties(sslBundles.getIfAvailable());
         return new KafkaAdmin(adminProperties);
     }
 
     @Bean
-    public KafkaTemplate<String, PaymentNotification> noboNotificatonKafkaTemplate(ObjectProvider<SslBundles> sslBundles,
-                                                                                   KafkaAdmin noboKafkaAdmin) {
-        var template = new KafkaTemplate<>(noboKafkaNotificatonProducerFactory(sslBundles));
-        template.setKafkaAdmin(noboKafkaAdmin);
+    public KafkaTemplate<String, PaymentNotification> notificatonKafkaTemplate(ObjectProvider<SslBundles> sslBundles,
+                                                                               KafkaAdmin sandwichKafkaAdmin) {
+        var template = new KafkaTemplate<>(kafkaNotificatonProducerFactory(sslBundles));
+        template.setKafkaAdmin(sandwichKafkaAdmin);
         template.setMicrometerTagsProvider(getMicrometerTagsProvider());
         template.setObservationEnabled(true);
         return template;
     }
 
     @Bean
-    public ProducerFactory<String, PaymentNotification> noboKafkaNotificatonProducerFactory(ObjectProvider<SslBundles> sslBundles) {
+    public ProducerFactory<String, PaymentNotification> kafkaNotificatonProducerFactory(ObjectProvider<SslBundles> sslBundles) {
         var producerProperties = this.kafka.buildProducerProperties(sslBundles.getIfAvailable());
         return new DefaultKafkaProducerFactory<>(producerProperties, new StringSerializer(), new JsonSerializer<>());
     }
