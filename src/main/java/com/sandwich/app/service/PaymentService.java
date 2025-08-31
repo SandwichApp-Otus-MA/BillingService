@@ -56,15 +56,28 @@ public class PaymentService {
     }
 
     public PaymentResponse checkStatus(UUID id) {
-        var response = transactionTemplate.execute(status -> {
+        var payment = getPayment(id);
+        assert payment != null;
+
+        var response = new PaymentResponse()
+            .setId(payment.getId())
+            .setStatus(payment.getStatus())
+            .setErrorMessage(payment.getErrorMessage());
+
+        notificationService.send(new PaymentNotification()
+            .setUserId(payment.getUserAccount().getUserId())
+            .setMessage(response));
+
+        return response;
+    }
+
+    private PaymentEntity getPayment(UUID id) {
+        return transactionTemplate.execute(status -> {
             var payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Платеж не найден"));
 
             if (payment.getStatus() != PaymentStatus.PENDING) {
-                return new PaymentResponse()
-                    .setId(payment.getId())
-                    .setStatus(payment.getStatus())
-                    .setErrorMessage(payment.getErrorMessage());
+                return payment;
             }
 
             // todo: эмуляция проверки статуса платежа
@@ -75,21 +88,7 @@ public class PaymentService {
                 payment.setStatus(PaymentStatus.SUCCEEDED);
             }
 
-            var updatedPayment = paymentRepository.save(payment);
-
-            return new PaymentResponse()
-                .setId(updatedPayment.getId())
-                .setStatus(updatedPayment.getStatus())
-                .setErrorMessage(updatedPayment.getErrorMessage());
+            return paymentRepository.save(payment);
         });
-
-        assert response != null;
-
-        notificationService.send(new PaymentNotification()
-            .setId(response.getId())
-            .setStatus(response.getStatus())
-            .setErrorMessage(response.getErrorMessage()));
-
-        return response;
     }
 }

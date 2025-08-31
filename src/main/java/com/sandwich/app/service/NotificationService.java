@@ -21,7 +21,7 @@ public class NotificationService {
         try {
             kafkaTemplate.send(notificationTopic, notification);
         } catch (Exception ex) {
-            log.error("Не удалось отправить уведомление со статусом платежа {}", notification.getId());
+            log.error("Не удалось отправить уведомление со статусом платежа {}", notification.getUserId());
         }
     }
 }
