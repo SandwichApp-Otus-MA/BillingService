@@ -22,16 +22,16 @@ public class UserAccountService {
 
     @Transactional(readOnly = true)
     public UserAccountDto get(UUID id) {
-        return userAccountRepository.findById(id)
+        return userAccountRepository.findByUserId(id)
             .map(userAccountMapper::convert)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     @Transactional
     public UUID create(UserAccountDto user) {
-        Optional.ofNullable(user.getId())
-            .flatMap(id -> userAccountRepository.findById(user.getId())).ifPresent(o -> {
-                throw new IllegalStateException("Пользователь c id: %s уже существует!".formatted(user.getId()));
+        Optional.ofNullable(user.getUserId())
+            .flatMap(id -> userAccountRepository.findByUserId(user.getUserId())).ifPresent(o -> {
+                throw new IllegalStateException("Пользователь c id: %s уже существует!".formatted(user.getUserId()));
             });
 
         var newUserAccount = userAccountMapper.convert(new UserAccountEntity(), user)
@@ -41,8 +41,8 @@ public class UserAccountService {
 
     @Transactional
     public void edit(UserAccountDto user) {
-        var existUser = Optional.ofNullable(user.getId())
-            .flatMap(id -> userAccountRepository.findByIdWithLock(user.getId()))
+        var existUser = Optional.ofNullable(user.getUserId())
+            .flatMap(id -> userAccountRepository.findByUserIdWithLock(user.getUserId()))
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         userAccountMapper.convert(existUser, user);
@@ -82,6 +82,6 @@ public class UserAccountService {
 
     @Transactional
     public void delete(UUID id) {
-        userAccountRepository.deleteById(id);
+        userAccountRepository.deleteByUserId(id);
     }
 }

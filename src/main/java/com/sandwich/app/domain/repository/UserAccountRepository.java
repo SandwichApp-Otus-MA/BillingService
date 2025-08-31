@@ -17,16 +17,13 @@ public interface UserAccountRepository extends JpaRepository<UserAccountEntity, 
     JpaSpecificationExecutor<UserAccountEntity>,
     QuerydslPredicateExecutor<UserAccountEntity> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT a FROM UserAccountEntity a WHERE a.id = :id")
-    Optional<UserAccountEntity> findByIdWithLock(@Param("id") UUID id);
+    Optional<UserAccountEntity> findByUserId(UUID id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM UserAccountEntity a WHERE a.userId = :id")
     Optional<UserAccountEntity> findByUserIdWithLock(@Param("id") UUID id);
 
-    @Override
     @Modifying
-    @Query("delete from UserAccountEntity where id = :id")
-    void deleteById(@Param("id") UUID id);
+    @Query("delete from UserAccountEntity where userId = :id")
+    void deleteByUserId(@Param("id") UUID id);
 }

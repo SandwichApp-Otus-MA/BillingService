@@ -12,7 +12,7 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PaymentRequest {
     private UUID orderId;
-    private UUID userAccountId;
+    private UUID userId;
     private BigDecimal amount;
     private String currency;
     private String description;

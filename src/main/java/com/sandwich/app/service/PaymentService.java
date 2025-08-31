@@ -29,7 +29,7 @@ public class PaymentService {
         // todo: эмуляция отправки заявки в сервис оплаты
         var externalId = UUID.randomUUID();
 
-        var userAccount = userAccountRepository.findByIdWithLock(request.getUserAccountId())
+        var userAccount = userAccountRepository.findByUserIdWithLock(request.getUserId())
             .orElseThrow(() -> new EntityNotFoundException("Не найден аккаунт пользователя!"));
 
         if (userAccount.getBalance().compareTo(request.getAmount()) < 0) {

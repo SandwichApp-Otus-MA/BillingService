@@ -16,7 +16,6 @@ import java.util.UUID;
 @Accessors(chain = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserAccountDto {
-    private UUID id;
     @NotNull
     private UUID userId;
     @NotNull

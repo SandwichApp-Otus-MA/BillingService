@@ -46,19 +46,19 @@ public class UserAccountController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/deposit/{id}")
-    public ResponseEntity<BigDecimal> deposit(@PathVariable UUID id, @RequestParam BigDecimal amount) {
-        return ResponseEntity.ok(userAccountService.deposit(id, amount));
+    @PostMapping("/deposit/{userId}")
+    public ResponseEntity<BigDecimal> deposit(@PathVariable UUID userId, @RequestParam BigDecimal amount) {
+        return ResponseEntity.ok(userAccountService.deposit(userId, amount));
     }
 
-    @PostMapping("/withdraw/{id}")
-    public ResponseEntity<BigDecimal> withdraw(@PathVariable UUID id, @RequestParam BigDecimal amount) {
-        return ResponseEntity.ok(userAccountService.withdraw(id, amount));
+    @PostMapping("/withdraw/{userId}")
+    public ResponseEntity<BigDecimal> withdraw(@PathVariable UUID userId, @RequestParam BigDecimal amount) {
+        return ResponseEntity.ok(userAccountService.withdraw(userId, amount));
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        userAccountService.delete(id);
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<Void> delete(@PathVariable UUID userId) {
+        userAccountService.delete(userId);
         return ResponseEntity.ok().build();
     }
 }
