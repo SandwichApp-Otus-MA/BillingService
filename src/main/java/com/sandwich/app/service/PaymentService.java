@@ -1,6 +1,7 @@
 package com.sandwich.app.service;
 
 import com.sandwich.app.domain.dto.enums.PaymentStatus;
+import com.sandwich.app.domain.dto.notificator.PaymentNotification;
 import com.sandwich.app.domain.dto.payment.PaymentRequest;
 import com.sandwich.app.domain.dto.payment.PaymentResponse;
 import com.sandwich.app.domain.entity.PaymentEntity;
@@ -10,6 +11,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.UUID;
 
@@ -19,18 +21,30 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final UserAccountRepository userAccountRepository;
+    private final NotificationService notificationService;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional
     public PaymentResponse create(PaymentRequest request) {
         // todo: эмуляция отправки заявки в сервис оплаты
         var externalId = UUID.randomUUID();
 
+        var userAccount = userAccountRepository.findByIdWithLock(request.getUserAccountId())
+            .orElseThrow(() -> new EntityNotFoundException("Не найден аккаунт пользователя!"));
+
+        if (userAccount.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new IllegalArgumentException("На счёте недостаточно средств!");
+        }
+
+        userAccount.setBalance(
+            userAccount.getBalance().subtract(request.getAmount()));
+
         var payment = new PaymentEntity()
             .setExternalId(externalId)
             .setAmount(request.getAmount())
             .setCurrency(request.getCurrency())
             .setOrderId(request.getOrderId())
-            .setUserAccount(userAccountRepository.getReferenceById(request.getUserAccountId()))
+            .setUserAccount(userAccount)
             .setDescription(request.getDescription())
             .setStatus(PaymentStatus.PENDING);
 
@@ -41,31 +55,41 @@ public class PaymentService {
             .setStatus(newPayment.getStatus());
     }
 
-    @Transactional
     public PaymentResponse checkStatus(UUID id) {
-        var payment = paymentRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Платеж не найден"));
+        var response = transactionTemplate.execute(status -> {
+            var payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Платеж не найден"));
 
-        if (payment.getStatus() != PaymentStatus.PENDING) {
+            if (payment.getStatus() != PaymentStatus.PENDING) {
+                return new PaymentResponse()
+                    .setId(payment.getId())
+                    .setStatus(payment.getStatus())
+                    .setErrorMessage(payment.getErrorMessage());
+            }
+
+            // todo: эмуляция проверки статуса платежа
+            if (Math.random() < 0.5) {
+                payment.setStatus(PaymentStatus.FAILED)
+                    .setErrorMessage("Что-то пошло не так!");
+            } else {
+                payment.setStatus(PaymentStatus.SUCCEEDED);
+            }
+
+            var updatedPayment = paymentRepository.save(payment);
+
             return new PaymentResponse()
-                .setId(payment.getId())
-                .setStatus(payment.getStatus())
-                .setErrorMessage(payment.getErrorMessage());
-        }
+                .setId(updatedPayment.getId())
+                .setStatus(updatedPayment.getStatus())
+                .setErrorMessage(updatedPayment.getErrorMessage());
+        });
 
-        // todo: эмуляция проверки статуса платежа
-        if (Math.random() < 0.5) {
-            payment.setStatus(PaymentStatus.FAILED)
-                .setErrorMessage("Что-то пошло не так!");
-        } else {
-            payment.setStatus(PaymentStatus.SUCCEEDED);
-        }
+        assert response != null;
 
-        var updatedPayment = paymentRepository.save(payment);
+        notificationService.send(new PaymentNotification()
+            .setId(response.getId())
+            .setStatus(response.getStatus())
+            .setErrorMessage(response.getErrorMessage()));
 
-        return new PaymentResponse()
-            .setId(updatedPayment.getId())
-            .setStatus(updatedPayment.getStatus())
-            .setErrorMessage(updatedPayment.getErrorMessage());
+        return response;
     }
 }
