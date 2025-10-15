@@ -8,7 +8,7 @@ spring:
       - ssl.yml
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 logging:
   level:
